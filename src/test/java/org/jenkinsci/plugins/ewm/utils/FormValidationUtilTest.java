@@ -4,6 +4,8 @@ import hudson.util.FormValidation;
 import org.apache.commons.lang.StringUtils;
 import org.junit.Test;
 
+import java.io.File;
+
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
@@ -17,6 +19,7 @@ public class FormValidationUtilTest {
     private static final String UNSAFE_SYMBOL_MSG = "It may be unsafe to use standalone $ symbol for workspace template. It is recommended to use ${ } instead";
     private static final String NOT_VALID_PARENTHESES = "The workspace template parentheses are not valid";
     private static final String NOT_RELATIVE_PATH = "Must be a relative path";
+    private static final String FS = File.separator;
 
     @Test
     public void validTemplate() {
@@ -27,7 +30,7 @@ public class FormValidationUtilTest {
     @Test
     public void relativePath() {
         @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
-        FormValidation formValidation = FormValidationUtil.validateWorkspaceTemplate("/${JOB_NAME}");
+        FormValidation formValidation = FormValidationUtil.validateWorkspaceTemplate(FS + "${JOB_NAME}");
         assertThat(formValidation.kind, is(FormValidation.Kind.ERROR));
         assertThat(StringUtils.countMatches(formValidation.renderHtml(), NOT_RELATIVE_PATH), is(1));
     }
@@ -35,7 +38,7 @@ public class FormValidationUtilTest {
     @Test
     public void unsafeSymbol() {
         @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
-        FormValidation formValidation = FormValidationUtil.validateWorkspaceTemplate("$JOB_NAME/$BUILD_NUMBER");
+        FormValidation formValidation = FormValidationUtil.validateWorkspaceTemplate("$JOB_NAME" + FS + "$BUILD_NUMBER");
         assertThat(formValidation.kind, is(FormValidation.Kind.WARNING));
         assertThat(StringUtils.countMatches(formValidation.renderHtml(), UNSAFE_SYMBOL_MSG), is(1));
     }
@@ -84,7 +87,7 @@ public class FormValidationUtilTest {
     @Test
     public void notValidParenthesesWithUnsafeSymbol() {
         @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
-        FormValidation formValidation = FormValidationUtil.validateWorkspaceTemplate("${foobar}/$foo/${bar");
+        FormValidation formValidation = FormValidationUtil.validateWorkspaceTemplate("${foobar}" + FS + "$foo" + FS + "${bar");
         assertThat(formValidation.kind, is(FormValidation.Kind.ERROR));
         assertThat(StringUtils.countMatches(formValidation.renderHtml(), UNSAFE_SYMBOL_MSG), is(1));
         assertThat(StringUtils.countMatches(formValidation.renderHtml(), NOT_VALID_PARENTHESES), is(1));
@@ -93,7 +96,7 @@ public class FormValidationUtilTest {
     @Test
     public void notRelativePathWithNotValidParenthesesAndUnsafeSymbol() {
         @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
-        FormValidation formValidation = FormValidationUtil.validateWorkspaceTemplate("/${foobar/$foo");
+        FormValidation formValidation = FormValidationUtil.validateWorkspaceTemplate(FS + "${foobar" + FS + "$foo");
         assertThat(formValidation.kind, is(FormValidation.Kind.ERROR));
         assertThat(StringUtils.countMatches(formValidation.renderHtml(), NOT_RELATIVE_PATH), is(1));
         assertThat(StringUtils.countMatches(formValidation.renderHtml(), NOT_VALID_PARENTHESES), is(1));

@@ -6,6 +6,8 @@ import hudson.slaves.NodeProperty;
 import hudson.slaves.NodePropertyDescriptor;
 import hudson.util.DescribableList;
 
+import java.io.File;
+import java.nio.file.Paths;
 import java.util.List;
 
 import org.jenkinsci.plugins.ewm.nodes.NodeDisk;
@@ -54,6 +56,6 @@ public class ConfigMigrationTest {
 
         NodeDisk disk = disks.get(0);
         assertThat(disk.getDiskRefId(), is("d1"));
-        assertThat(disk.getNodeMountPoint(), is("/tmp/dp1/d1"));
+        assertThat(disk.getNodeMountPoint(), is(Paths.get(File.separator, "tmp", "dp1", "d1").toString()));
     }
 }

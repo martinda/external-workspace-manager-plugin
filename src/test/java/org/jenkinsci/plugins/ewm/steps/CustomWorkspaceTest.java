@@ -6,6 +6,7 @@ import hudson.model.ParametersDefinitionProperty;
 import hudson.model.Result;
 import hudson.model.StringParameterDefinition;
 import hudson.model.StringParameterValue;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.RandomStringUtils;
 import org.jenkinsci.plugins.ewm.TestUtil;
 import org.jenkinsci.plugins.ewm.definitions.Disk;
@@ -25,6 +26,7 @@ import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Collections;
 
 import static java.lang.String.format;
@@ -89,7 +91,7 @@ public class CustomWorkspaceTest {
         ParametersAction parameterValues = new ParametersAction(parameterValue);
 
         WorkflowRun run = j.assertBuildStatusSuccess(job.scheduleBuild2(0, parameterValues));
-        verifyWorkspacePath(format("%s/%s/%d", job.getFullName(), prBuildNumberValue, run.getNumber()), run);
+        verifyWorkspacePath(run, job.getFullName(), prBuildNumberValue, Integer.toString(run.getNumber()));
     }
 
     @Test
@@ -99,7 +101,7 @@ public class CustomWorkspaceTest {
                 "def extWorkspace = exwsAllocate diskPoolId: '%s', path: customPath", DISK_POOL_ID));
 
         j.assertBuildStatus(Result.FAILURE, run);
-        j.assertLogContains(format("ERROR: The custom path: /%s/%s must be a relative path", run.getParent().getFullName(), run.getNumber()), run);
+        j.assertLogContains(format("ERROR: The custom path: %s must be a relative path", Paths.get(File.separator, run.getParent().getFullName(), Integer.toString(run.getNumber()))), run);
     }
 
     @Test
@@ -116,7 +118,7 @@ public class CustomWorkspaceTest {
                 "} \n", folder, DISK_POOL_ID)));
 
         WorkflowRun run = j.assertBuildStatusSuccess(job.scheduleBuild2(0));
-        verifyWorkspacePath(format("%s/%s/%d", folder, job.getFullName(), run.getNumber()), run);
+        verifyWorkspacePath(run, folder, job.getFullName(), Integer.toString(run.getNumber()));
     }
 
     @Test
@@ -127,7 +129,7 @@ public class CustomWorkspaceTest {
                 "def extWorkspace = exwsAllocate diskPoolId: '%s', path: customPath", DISK_POOL_ID));
 
         j.assertBuildStatus(Result.FAILURE, run);
-        j.assertLogContains("The custom path: ${env.JOB_NAME}/${env.BUILD_NUMBER} contains '${' characters. Did you resolve correctly the parameters with Build DSL?", run);
+        j.assertLogContains("The custom path: ${env.JOB_NAME}" + File.separator + "${env.BUILD_NUMBER} contains '${' characters. Did you resolve correctly the parameters with Build DSL?", run);
     }
 
     @Test
@@ -147,7 +149,7 @@ public class CustomWorkspaceTest {
                 "} \n", prBuildNumberValue, DISK_POOL_ID));
 
         j.assertBuildStatusSuccess(run);
-        verifyWorkspacePath(format("%s/%s/%d", run.getParent().getFullName(), prBuildNumberValue, run.getNumber()), run);
+        verifyWorkspacePath(run, run.getParent().getFullName(), prBuildNumberValue, Integer.toString(run.getNumber()));
     }
 
     @Test
@@ -164,7 +166,7 @@ public class CustomWorkspaceTest {
                 "} \n", DISK_POOL_ID));
 
         j.assertBuildStatusSuccess(run);
-        verifyWorkspacePath(format("%s/%s/%d", folder, run.getParent().getFullName(), run.getNumber()), run);
+        verifyWorkspacePath(run, folder, run.getParent().getFullName(), Integer.toString(run.getNumber()));
     }
 
     @Test
@@ -190,16 +192,17 @@ public class CustomWorkspaceTest {
 
     private static void setGlobalWorkspaceTemplate(String template) {
         Disk disk = new Disk(DISK_ID_ONE, null, "mount", null, null);
-        DiskPool diskPool = new DiskPool(DISK_POOL_ID, null, null, template, null, null, Collections.singletonList(disk));
+        DiskPool diskPool = new DiskPool(DISK_POOL_ID, null, null, FilenameUtils.separatorsToSystem(template), null, null, Collections.singletonList(disk));
         setUpDiskPools(j.jenkins, diskPool);
     }
 
-    private void verifyWorkspacePath(String computedCustomPath, WorkflowRun run) throws Exception {
-        File customWorkspace = new File(tmpFolder, computedCustomPath);
+    private void verifyWorkspacePath(WorkflowRun run, String pathName, String... pathNames) throws Exception {
+        String universalComputedCustomPath = Paths.get(pathName, pathNames).toString();
+        File customWorkspace = new File(tmpFolder, universalComputedCustomPath);
         File[] files = customWorkspace.listFiles();
 
-        j.assertLogContains(format("The path on Disk is: %s", computedCustomPath), run);
-        j.assertLogContains(format("Running in %s/%s", tmpFolder.getAbsolutePath(), computedCustomPath), run);
+        j.assertLogContains(format("The path on Disk is: %s", universalComputedCustomPath), run);
+        j.assertLogContains(format("Running in %s", Paths.get(tmpFolder.getAbsolutePath(), universalComputedCustomPath)), run);
         assertThat(files, notNullValue());
         assertThat(files, arrayWithSize(1));
         assertThat(files[0].getName(), is("foobar.txt"));
