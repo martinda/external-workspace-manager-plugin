@@ -101,7 +101,7 @@ public class CustomWorkspaceTest {
                 "def extWorkspace = exwsAllocate diskPoolId: '%s', path: customPath", DISK_POOL_ID));
 
         j.assertBuildStatus(Result.FAILURE, run);
-        j.assertLogContains(format("ERROR: The custom path: %s must be a relative path", Paths.get(File.separator, run.getParent().getFullName(), Integer.toString(run.getNumber()))), run);
+        j.assertLogContains(format("ERROR: The custom path: /%s/%d must be a relative path", run.getParent().getFullName(), run.getNumber()), run);
     }
 
     @Test
