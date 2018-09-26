@@ -171,7 +171,7 @@ public class CustomWorkspaceTest {
 
     @Test
     public void globalWorkspaceTemplatePathIsAbsolute() throws Exception {
-        setGlobalWorkspaceTemplate("/${JOB_NAME}/${BUILD_NUMBER}");
+        setGlobalWorkspaceTemplate(Paths.get(File.separator, "${JOB_NAME}", File.separator, "${BUILD_NUMBER}").toString());
 
         WorkflowRun run = createWorkflowJobAndRun(format("def extWorkspace = exwsAllocate diskPoolId: '%s'", DISK_POOL_ID));
 
