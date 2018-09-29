@@ -56,6 +56,6 @@ public class ConfigMigrationTest {
 
         NodeDisk disk = disks.get(0);
         assertThat(disk.getDiskRefId(), is("d1"));
-        assertThat(disk.getNodeMountPoint(), is(Paths.get(File.separator, "tmp", "dp1", "d1").toString()));
+        assertThat(disk.getNodeMountPoint(), is("/tmp/dp1/d1"));
     }
 }
