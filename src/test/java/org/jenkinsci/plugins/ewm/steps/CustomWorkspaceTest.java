@@ -129,7 +129,7 @@ public class CustomWorkspaceTest {
                 "def extWorkspace = exwsAllocate diskPoolId: '%s', path: customPath", DISK_POOL_ID));
 
         j.assertBuildStatus(Result.FAILURE, run);
-        j.assertLogContains("The custom path: ${env.JOB_NAME}" + File.separator + "${env.BUILD_NUMBER} contains '${' characters. Did you resolve correctly the parameters with Build DSL?", run);
+        j.assertLogContains("The custom path: ${env.JOB_NAME}/${env.BUILD_NUMBER} contains '${' characters. Did you resolve correctly the parameters with Build DSL?", run);
     }
 
     @Test
@@ -186,8 +186,8 @@ public class CustomWorkspaceTest {
         WorkflowRun run = createWorkflowJobAndRun(format("def extWorkspace = exwsAllocate diskPoolId: '%s'", DISK_POOL_ID));
 
         j.assertBuildStatus(Result.FAILURE, run);
-        j.assertLogContains("ERROR: Can't resolve the following workspace template: ${JOB_NAME_WITH_TYPO}/${BUILD_NUMBER}. " +
-                "The resulting path is: ${JOB_NAME_WITH_TYPO}/1. Did you provide all the needed environment variables?", run);
+        j.assertLogContains("ERROR: Can't resolve the following workspace template: ${JOB_NAME_WITH_TYPO}" + File.separator + "${BUILD_NUMBER}. " +
+                "The resulting path is: ${JOB_NAME_WITH_TYPO}" + File.separator + "1. Did you provide all the needed environment variables?", run);
     }
 
     private static void setGlobalWorkspaceTemplate(String template) {
