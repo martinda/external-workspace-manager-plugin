@@ -113,7 +113,7 @@ public class ExwsAllocateStepTest {
 
     @Test
     public void physicalPathOnDiskNotRelative() throws Exception {
-        setUpDiskPool(new Disk(DISK_ID_ONE, "name", "mount", File.separator + "path", null));
+        setUpDiskPool(new Disk(DISK_ID_ONE, "name", "mount", "/path", null));
         createUpstreamJobAndRun();
 
         j.assertBuildStatus(FAILURE, upstreamRun);
